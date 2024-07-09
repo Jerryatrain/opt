@@ -274,6 +274,9 @@ def trade_cal(past_weight, holding_df, trade_target, today_stock_return, drop_li
 # stock_today[stock_today['security_code'] == '600650']
 
 def backtest_single(score_df, turnover_punish, file_name):
+    # 判断file_name是否存在，不存在则创建文件夹
+    if not os.path.exists(file_name):
+        os.makedirs(file_name)
 
     # 个股数据整理
     # 生成个股和指数涨跌幅
@@ -330,11 +333,12 @@ def backtest_single(score_df, turnover_punish, file_name):
     industry_list = list(score_df['sw_industry'].unique())
     df_index = pd.DataFrame(columns=barra_list + industry_list + barra_std_list)
     for date_, df_ in index_weight.groupby('trade_date'):
-        df_ = df_[df_['weight'] != 0]
-        df_[barra_list] = df_[barra_list].T.mul(list(df_['weight'])).T * len(df_)
-        df_index.loc[date_, barra_list] = df_[barra_list].mean()  # 指数barra
-        df_index.loc[date_, barra_std_list] = list(df_[barra_list].std())  # 指数barra标准差
-        df_index.loc[date_, industry_list] = df_['sw_industry'].value_counts() / len(df_)
+        df_index.loc[date_, barra_list] = np.average(df_[barra_list], weights=df_['weight'], axis=0)  # 指数barra加权均值
+        # 加权标准差
+        df_index.loc[date_, barra_std_list] = np.average(
+            (df_[barra_list] - df_index.loc[date_, barra_list]) ** 2, weights=df_['weight'],
+            axis=0) ** 0.5
+        df_index.loc[date_, industry_list] = df_.groupby('sw_industry')['weight'].sum() / df_['weight'].sum()
     df_index.fillna(0, inplace=True)
 
     for barra_ in barra_list:
@@ -590,7 +594,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     lines, labels = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     plt.legend(lines + lines2, labels + labels2, loc='upper left')
-    plt.savefig(r"./figure_save/increase_asset.jpg", dpi=1000)
+    # plt.savefig(r"./figure_save/increase_asset.jpg", dpi=1000)
+    plt.savefig(os.path.join(file_name, 'increase_asset.jpg'), dpi=1000)
     # 图3：换手率走势
     fig, ax1 = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     turnover_figure = turnover_record.iloc[1:]  # 第一天建仓，数据没意义
@@ -598,7 +603,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('换手率')
     lines, labels = ax1.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/turnover_rate.jpg", dpi=1000)
+    #plt.savefig(r"./figure_save/turnover_rate.jpg", dpi=1000)
+    plt.savefig(os.path.join(file_name, 'turnover_rate.jpg'), dpi=1000)
     # 图4：平均市值变动
     fig, ax1 = plt.subplots(figsize=(10, 5))
     ax1.plot(list(holding_value_record.index), list(holding_value_record['num']), color='red', label='持仓个股数目')
@@ -612,8 +618,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     lines = [ax1.get_lines()[0], ax2.get_lines()[0]]
     ax1.legend(lines, [line.get_label() for line in lines])
     plt.title('持仓数量和市值')
-    plt.savefig(r"./figure_save/holding_value.jpg", dpi=1000)
-    # plt.savefig(os.path.join(file_name, 'holding_value.jpg'), dpi=1000)
+    #plt.savefig(r"./figure_save/holding_value.jpg", dpi=1000)
+    plt.savefig(os.path.join(file_name, 'holding_value.jpg'), dpi=1000)
     # 图5：持仓股比例
     plt.figure(figsize=(10, 6))
     ax = holding_index_weight.plot(kind='bar', stacked=True)
@@ -628,7 +634,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.ylabel('Value')
     plt.title('指数成分股占比')
     plt.show()
-    plt.savefig(r"./figure_save/holding_index_weight.jpg", dpi=1000)
+    #plt.savefig(r"./figure_save/holding_index_weight.jpg", dpi=1000)
+    plt.savefig(os.path.join(file_name, 'holding_index_weight.jpg'), dpi=1000)
     # 图5-15：barra图
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_beta
@@ -642,7 +649,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势'%name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg"%name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg"%name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg'%name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_momentum
@@ -656,7 +664,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_size
@@ -670,7 +679,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_earnyild
@@ -684,7 +694,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_resvol
@@ -698,7 +709,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_growth
@@ -712,7 +724,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_btop
@@ -726,7 +739,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_leverage
@@ -740,7 +754,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_liquidty
@@ -754,7 +769,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_sizenl
@@ -768,7 +784,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.title('%s走势' % name)
     lines, labels = ax.get_legend_handles_labels()
     plt.legend(lines, labels, loc='upper left')
-    plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    #plt.savefig(r"./figure_save/%s.jpg" % name, dpi=1000)
+    plt.savefig(os.path.join(file_name, '%s.jpg' % name), dpi=1000)
 
     # 逐年收益、夏普、回撤
     return_yr = asset_record.groupby(['trade_year']).last().reset_index()

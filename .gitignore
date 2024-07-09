@@ -1,3 +1,5 @@
 .DS_Store
-data/
+Database/Origin_Database/
 save_fig/
+score_2model.pkl
+__pycache__/

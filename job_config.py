@@ -22,8 +22,8 @@ test_init_date = '2024-02-29'  # 回测起始日期
 benchmark = '000852'  # 基准
 # benchmark = '000905'  # 基准
 
-# database_path = 'Database/Origin_Database'  # 底层原始数据
-database_path = os.getcwd()
+
+database_path = 'Database/Origin_Database'  # 底层原始数据
 neut_data = 'Database/Neut_Database'  # 中性化后的数据
 model_path = 'Database/Model_Save'  # 保存临时模型的位置
 

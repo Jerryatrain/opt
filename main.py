@@ -162,9 +162,10 @@ def backtest_job_multi():
 
     # Define the parameter combinations
     params = [
+        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.1, '周期5+10+22_1000'),
+        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.3, '周期5+10+22_1000'),
         (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.5, '周期5+10+22_1000'),
-        (['security_code', 'trade_date', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000300', 300, 0.1, '周期10+22_300'),
-        (['security_code', 'trade_date', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000300', 300, 0.3, '周期10+22_300')
+        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.7, '周期5+10+22_1000')
     ]
 
     # Execute the function in parallel
