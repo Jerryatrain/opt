@@ -10,7 +10,7 @@ import job_config as jc
 import model_config as mc
 # from Functions.doc_functions import *
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif']=['Arial Unicode MS']#用来正常显示中文标签
+plt.rcParams['font.sans-serif']=['SimHei']#用来正常显示中文标签
 plt.rcParams['axes.unicode_minus']=False#用来正常显示负号
 import matplotlib
 matplotlib.use('Agg')  # 不显示图片
@@ -552,7 +552,7 @@ def backtest_single(score_df, turnover_punish, file_name):
         holding_['trade_date'] = date_
         holding_result.append(holding_)
     holding_result = pd.concat(holding_result, axis=0)
-    holding_result.to_excel('holding_result.xlsx')
+    holding_result.to_excel(os.path.join(file_name, 'holding_record.xlsx'))
     # 生成回测文档
     asset_record.loc[asset_record.index[0] - timedelta(days=1), 'asset'] = 1  # 加入初始日期
     asset_record.sort_index(inplace=True)
@@ -568,7 +568,7 @@ def backtest_single(score_df, turnover_punish, file_name):
     asset_record['max_draw_down'] = asset_record['asset'].expanding().max()  # 累计收益率的历史最大值
     asset_record['max_draw_down'] = asset_record['asset'] / asset_record['max_draw_down'] - 1  # 回撤
     asset_record['trade_year'] = asset_record['trade_date'].dt.year
-    asset_record.to_excel('asset_record.xlsx')
+    asset_record.to_excel(os.path.join(file_name, 'asset_record.xlsx'))
     # 图1：绝对收益、指数收益、超额收益
     fig, ax1 = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     ax2 = ax1.twinx()
@@ -581,7 +581,7 @@ def backtest_single(score_df, turnover_punish, file_name):
     lines, labels = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     plt.legend(lines + lines2, labels + labels2, loc='upper left')
-    plt.savefig(r".//abs_asset.jpg", dpi=1000)
+    plt.savefig(os.path.join(file_name, 'abs_asset.jpg'), dpi=1000)
 
     # 图2： 超额收益、超额最大回撤
     fig, ax1 = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
@@ -596,7 +596,9 @@ def backtest_single(score_df, turnover_punish, file_name):
     plt.legend(lines + lines2, labels + labels2, loc='upper left')
     # plt.savefig(r"./figure_save/increase_asset.jpg", dpi=1000)
     plt.savefig(os.path.join(file_name, 'increase_asset.jpg'), dpi=1000)
+
     # 图3：换手率走势
+    turnover_record.to_excel(os.path.join(file_name, 'turnover_record.xlsx'))
     fig, ax1 = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     turnover_figure = turnover_record.iloc[1:]  # 第一天建仓，数据没意义
     ax1.plot(list(turnover_figure.index), list(turnover_figure['turnover_rate']), color='red', label='换手率走势')
@@ -606,6 +608,7 @@ def backtest_single(score_df, turnover_punish, file_name):
     #plt.savefig(r"./figure_save/turnover_rate.jpg", dpi=1000)
     plt.savefig(os.path.join(file_name, 'turnover_rate.jpg'), dpi=1000)
     # 图4：平均市值变动
+    holding_value_record.to_excel(os.path.join(file_name, 'holding_value_record.xlsx'))
     fig, ax1 = plt.subplots(figsize=(10, 5))
     ax1.plot(list(holding_value_record.index), list(holding_value_record['num']), color='red', label='持仓个股数目')
     ax1.set_xlabel('日期')
@@ -621,6 +624,7 @@ def backtest_single(score_df, turnover_punish, file_name):
     #plt.savefig(r"./figure_save/holding_value.jpg", dpi=1000)
     plt.savefig(os.path.join(file_name, 'holding_value.jpg'), dpi=1000)
     # 图5：持仓股比例
+    holding_index_weight.to_excel(os.path.join(file_name, 'holding_index_weight.xlsx'))
     plt.figure(figsize=(10, 6))
     ax = holding_index_weight.plot(kind='bar', stacked=True)
     holding_index_num = holding_index_weight.copy()
@@ -637,6 +641,10 @@ def backtest_single(score_df, turnover_punish, file_name):
     #plt.savefig(r"./figure_save/holding_index_weight.jpg", dpi=1000)
     plt.savefig(os.path.join(file_name, 'holding_index_weight.jpg'), dpi=1000)
     # 图5-15：barra图
+    for barra_index in ['beta','momentum','size','earnyild', 'resvol', 'growth', 'btop', 'leverage', 'liquidty', 'sizenl']:
+        barr_parms = eval('barra_%s'%barra_index)
+        barr_parms.to_excel(os.path.join(file_name, 'barra_%s.xlsx'%barra_index))
+
     fig, ax = plt.subplots(figsize=(10, 5))  # 创建一个图表对象fig和一个坐标轴对象ax1，设置画布大小
     df = barra_beta
     name = 'beta'
@@ -801,6 +809,8 @@ def backtest_single(score_df, turnover_punish, file_name):
     yr = pd.merge(return_yr[['trade_year', 'return_yr']], sharpe_yr, on=['trade_year'], how='left')
     yr = pd.merge(yr, max_drawdown_yr, on=['trade_year'], how='left')
 
+    yr.to_excel(os.path.join(file_name, 'yr_record.xlsx'))
+
     # 总体收益、夏普、回撤
     return_all = asset_record.tail(1)
     all_days = asset_record.shape[0]
@@ -811,6 +821,7 @@ def backtest_single(score_df, turnover_punish, file_name):
     all_record = pd.DataFrame({'return_all': [return_all['return_all'].iloc[0]], 'sharpe_all': sharpe_all,
                          'max_drawdown_all': max_drawdown_all})
 
+    all_record.to_excel(os.path.join(file_name, 'all_record.xlsx'))
     # # 输出文档
     # test_doc = Document()
     # style = 'Light List Accent 2'

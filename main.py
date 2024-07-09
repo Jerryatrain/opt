@@ -161,15 +161,18 @@ def backtest_job_multi():
                         file_name='双模型_{}单周期拟合回测_惩罚{}_敞口{}'.format(file_name_suffix, turnover_punish, barra_std_num))
 
     # Define the parameter combinations
-    params = [
-        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.1, '周期5+10+22_1000'),
-        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.3, '周期5+10+22_1000'),
-        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.5, '周期5+10+22_1000'),
-        (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.7, '周期5+10+22_1000')
-    ]
+    # params = [
+    #     (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.1, '周期5+10+22_1000'),
+    #     (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.3, '周期5+10+22_1000'),
+    #     (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.5, '周期5+10+22_1000'),
+    #     (['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, 0.7, '周期5+10+22_1000')
+    # ]
+    params = []
+    for i in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
+        params.append((['security_code', 'trade_date', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, i, '周期5+10+22_1000'))
 
     # Execute the function in parallel
-    results = Parallel(n_jobs=3)(delayed(process_and_backtest)(*p) for p in params)
+    results = Parallel(n_jobs=-1)(delayed(process_and_backtest)(*p) for p in params)
 
 
 def daily_job(end_date):
