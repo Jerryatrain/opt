@@ -169,7 +169,7 @@ def backtest_job_multi():
     # ]
     params = []
     for i in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
-        params.append((['security_code', 'trade_date', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, i, '周期5+10+22_1000'))
+        params.append((['security_code', 'trade_date', 'score_MLP_5', 'score_Xgb_5', 'score_MLP_10', 'score_Xgb_10', 'score_MLP_22', 'score_Xgb_22'], '000852', 100, i, '周期5+10+22_1000'))
 
     # Execute the function in parallel
     results = Parallel(n_jobs=-1)(delayed(process_and_backtest)(*p) for p in params)
